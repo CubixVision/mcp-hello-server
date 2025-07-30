@@ -1,0 +1,23 @@
+{
+  "name": "mcp-hello-server",
+  "version": "1.0.0",
+  "description": "My first MCP Server",
+  "main": "index.js",
+  "scripts": {
+    "start": "ts-node src/index.ts",
+    "build": "tsc",
+    "test": "mocha -r ts-node/register src/**/*.test.ts",
+    "test:watch": "nodemon --exec \"npm test\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^24.1.0",
+    "mocha": "^11.7.1",
+    "nodemon": "^3.1.10",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}
