@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MCP Tool Tester</title>
+</head>
+
+<body>
+  <h1>MCP Tool Tester</h1>
+
+  <h2>Natural Language Prompt</h2>
+  <form id="nlForm">
+    <input type="text" id="nlInput" placeholder="e.g. Add 5 and 8 together" size="40" />
+    <button type="submit">Send</button>
+  </form>
+
+
+  <h2>Run Prompt</h2>
+  <form id="promptForm">
+    <input type="text" id="promptInput" placeholder="/math.add a=2 b=3" size="40" />
+    <button type="submit">Send Prompt</button>
+  </form>
+
+  <h2>Run Tool (Structured)</h2>
+  <form id="toolForm">
+    <label for="tool">Tool:</label>
+    <select id="tool">
+      <option value="hello">hello</option>
+      <option value="goodbye">goodbye</option>
+      <option value="math.add">math.add</option>
+    </select><br><br>
+
+    <div id="inputs"></div><br><br>
+    <button type="submit">Send Tool</button>
+  </form>
+
+  <h2>Response:</h2>
+  <pre id="response"></pre>
+
+  <script>
+    const promptForm = document.getElementById('promptForm');
+    const toolForm = document.getElementById('toolForm');
+    const toolSelect = document.getElementById('tool');
+    const inputsDiv = document.getElementById('inputs');
+    const responseEl = document.getElementById('response');
+    const nlForm = document.getElementById('nlForm');
+    const nlInput = document.getElementById('nlInput');
+
+    // Prompt handler
+    promptForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const prompt = document.getElementById('promptInput').value;
+
+      try {
+        const res = await fetch('/prompt', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt })
+        });
+
+        const data = await res.json();
+        responseEl.textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        responseEl.textContent = 'Error: ' + err.message;
+      }
+    });
+
+    // Tool form setup
+    toolSelect.addEventListener('change', updateInputs);
+    function updateInputs() {
+      const selectedTool = toolSelect.value;
+      inputsDiv.innerHTML = '';
+
+      if (selectedTool === 'hello' || selectedTool === 'goodbye') {
+        inputsDiv.innerHTML = `
+          <label for="name">Name:</label>
+          <input type="text" id="name" value="JP" />
+        `;
+      } else if (selectedTool === 'math.add') {
+        inputsDiv.innerHTML = `
+          <label for="a">A:</label>
+          <input type="number" id="a" value="2" /><br><br>
+          <label for="b">B:</label>
+          <input type="number" id="b" value="3" />
+        `;
+      }
+    }
+
+    toolForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const selectedTool = toolSelect.value;
+      let input = {};
+
+      if (selectedTool === 'hello' || selectedTool === 'goodbye') {
+        input.name = document.getElementById('name').value;
+      } else if (selectedTool === 'math.add') {
+        input.a = parseFloat(document.getElementById('a').value);
+        input.b = parseFloat(document.getElementById('b').value);
+      }
+
+      try {
+        const res = await fetch(`/tools/${selectedTool}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ input })
+        });
+
+        const data = await res.json();
+        responseEl.textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        responseEl.textContent = 'Error: ' + err.message;
+      }
+    });
+
+
+
+    nlForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const text = nlInput.value;
+      responseEl.textContent = '...';
+
+      try {
+        const res = await fetch('/nl', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text })
+        });
+
+        if (!res.ok) {
+          const errText = await res.text();
+          responseEl.textContent = `Error: ${errText}`;
+          return;
+        }
+
+        const data = await res.json();
+        responseEl.textContent = `Prompt: ${data.prompt}\nResult: ${JSON.stringify(data.result, null, 2)}`;
+      } catch (err) {
+        responseEl.textContent = 'Error: ' + err.message;
+      }
+    });
+
+
+    // Load initial inputs
+    updateInputs();
+  </script>
+</body>
+
+
+</html>
